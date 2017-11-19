@@ -41,6 +41,8 @@ class Channels {
                 break;
             case "AprilFoolsCatsChannel": klass = AprilFoolsCatsChannel;
                 break;
+            case "DevRantChannel": klass = DevRantChannel;
+                break;
             case "TheCatsOfProjectCATS": klass = TheCatsOfProjectCATS;
                 break;
             case "FlickrSearchChannel": klass = FlickrSearchChannel;
@@ -142,15 +144,17 @@ class Channels {
         if (!entries || (entries.length > 0 && !entries[0].name)) {
             // Default set of channels
             if (storage_get("project_cats")) {
-                this.add({ name: "TheCatsOfProjectCATS", param: undefined, enabled: true });
+                this.add({ name: "TheCatsOfProjectCATS", param: undefined, enabled: false });
                 this.add({ name: "TheCatsOfCatBlockUsersChannel", param: undefined,
                       enabled: false });
                 this.add({ name: "AprilFoolsCatsChannel", param: undefined, enabled: false });
+                this.add({ name: "DevRantChannel", param: undefined, enabled: true });
             } else {
                 this.add({ name: "TheCatsOfCatBlockUsersChannel", param: undefined,
-                      enabled: true });
-                this.add({ name: "AprilFoolsCatsChannel", param: undefined, enabled: true });
+                      enabled: false });
+                this.add({ name: "AprilFoolsCatsChannel", param: undefined, enabled: false });
                 this.add({ name: "TheCatsOfProjectCATS", param: undefined, enabled: false });
+                this.add({ name: "DevRantChannel", param: undefined, enabled: true });
             }
         } else {
             for (var i=0; i < entries.length; i++) {
@@ -250,6 +254,37 @@ class AprilFoolsCatsChannel extends Channel {
         ]);
     }
 
+}
+
+// Channel containing rants.
+class DevRantChannel extends Channel {
+    constructor() {
+        super();
+    }
+
+    _getLatestListings(callback) {
+        function L(rant) {
+            var folder = 'https://devrant.com/rants/';
+            var listing = new Listing({
+                width: 301, height: 158, url: folder + rant.id +'/image.png',
+                attribution_url: folder + rant.id,
+                title: rant.text.slice(0,160)
+            });
+            var img = new Image();
+            img.onload = function() {
+              listing.width = this.width;
+              listing.height = this.height;
+            }
+            img.src = folder + rant.id +'/image.png';
+            return listing;
+        }
+        $.getJSON('https://devrant.com/api/devrant/rants?app=3&sort=algo',function(data){
+          if(data.success){
+            var images = data.rants.map(L);
+            callback(images);
+          }
+        });
+    }
 }
 
 
